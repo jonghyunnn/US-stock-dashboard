@@ -315,11 +315,12 @@ function setGauge(v) {
 
 async function loadFng() {
   try {
-    const d = await fetch('https://api.alternative.me/fng/?limit=1').then(r => r.json());
-    const item = d.data[0];
-    setGauge(parseInt(item.value));
-    document.getElementById('fng-lbl').textContent = FNG_KR[item.value_classification] || item.value_classification;
-    document.getElementById('fng-ts').textContent  = '기준: ' + new Date(item.timestamp * 1000).toLocaleDateString('ko-KR');
+    const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
+    const d   = await res.json();
+    const value = Math.round(d.fear_and_greed.score);
+    setGauge(value);
+    document.getElementById('fng-lbl').textContent = FNG_KR[d.fear_and_greed.rating] || d.fear_and_greed.rating;
+    document.getElementById('fng-ts').textContent = 'CNN Fear & Greed';
   } catch {
     document.getElementById('fng-lbl').textContent = '데이터 없음';
   }
