@@ -72,17 +72,10 @@ async function get(url) {
 }
 
 async function fetchFng() {
-  const d = await get('https://api.alternative.me/fng/?limit=1');
-  return { value: parseInt(d.data[0].value), label: d.data[0].value_classification };
-}
-
-async function fetchRates() {
-  const d = await get('https://open.er-api.com/v6/latest/USD');
+  const d = await get('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
   return {
-    usdKrw: round(d.rates.KRW, 2),
-    eurUsd: round(1 / d.rates.EUR, 4),
-    usdJpy: round(d.rates.JPY, 2),
-    gbpUsd: round(1 / d.rates.GBP, 4),
+    value: Math.round(d.fear_and_greed.score),
+    label: d.fear_and_greed.rating
   };
 }
 
