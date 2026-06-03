@@ -46,16 +46,23 @@ async function get(url) {
 }
 
 async function fetchFng() {
-  const d = await get('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
-  return { value: Math.round(d.fear_and_greed.score), label: d.fear_and_greed.rating };
-}
-
-async function fetchRates() {
-  const d = await get('https://open.er-api.com/v6/latest/USD');
-  return {
-    usdKrw: round(d.rates.KRW, 2), eurUsd: round(1 / d.rates.EUR, 4),
-    usdJpy: round(d.rates.JPY, 2), gbpUsd: round(1 / d.rates.GBP, 4),
-  };
+  try {
+    const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Referer': 'https://edition.cnn.com/markets/fear-and-greed',
+        'Origin': 'https://edition.cnn.com',
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    return { value: Math.round(d.fear_and_greed.score), label: d.fear_and_greed.rating };
+  } catch(e) {
+    console.log(`⚠️ CNN API 실패(${e.message}), 대체 소스 사용`);
+    const d = await get('https://api.alternative.me/fng/?limit=1');
+    return { value: parseInt(d.data[0].value), label: d.data[0].value_classification };
+  }
 }
 
 async function fetchStock(symbol) {
