@@ -1,0 +1,32 @@
+name: 미국주식 노션 동기화
+
+on:
+  schedule:
+    # 매 30분마다 실행 (UTC 기준 — 한국시간 +9시간)
+    # 미국 장중(한국 밤 11시~새벽 6시)에 집중적으로 돌아감
+    - cron: '*/30 * * * *'
+  workflow_dispatch:    # GitHub 웹에서 수동 실행 버튼
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 패키지 설치
+        run: npm ci
+
+      - name: 노션 데이터 동기화
+        run: node scripts/notion-sync.js
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}

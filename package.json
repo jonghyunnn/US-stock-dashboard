@@ -1,0 +1,12 @@
+{
+  "name": "us-stock-dashboard",
+  "version": "1.0.0",
+  "description": "미국 주식 대시보드 + 노션 자동 동기화",
+  "private": true,
+  "scripts": {
+    "sync": "node scripts/notion-sync.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15"
+  }
+}

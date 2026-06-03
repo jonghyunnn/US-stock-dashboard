@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>미국 주식 대시보드</title>
+  <style>
+    :root {
+      --bg: #0D1117;
+      --surface: #161B22;
+      --border: #30363D;
+      --text: #E6EDF3;
+      --muted: #8B949E;
+      --green: #3FB950;
+      --red: #F85149;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; }
+
+    /* ── 티커 테이프 ── */
+    .ticker-wrap { background: var(--surface); border-bottom: 1px solid var(--border); }
+
+    /* ── 2단 레이아웃 ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: 810px;
+    }
+
+    /* ── 사이드바 ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      height: 810px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .section { border-bottom: 1px solid var(--border); padding: 14px; }
+    .section-title {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px;
+    }
+
+    /* 공포탐욕 */
+    .fng-val { font-size: 34px; font-weight: 700; text-align: center; margin: 4px 0; }
+    .fng-lbl { font-size: 13px; color: var(--muted); text-align: center; }
+
+    /* 환율 */
+    .rate-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid #21262D;
+    }
+    .rate-row:last-child { border-bottom: none; }
+    .rate-pair { color: var(--muted); font-size: 12px; }
+    .rate-val { font-weight: 600; font-size: 13px; }
+
+    /* ── 차트 영역 ── */
+    .charts {
+      display: grid;
+      grid-template-rows: 1fr 1fr 1fr;
+      height: 810px;
+    }
+    .chart-box {
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .chart-box:last-child { border-bottom: none; }
+    .chart-lbl {
+      position: absolute; top: 8px; left: 12px;
+      font-size: 11px; color: var(--muted); z-index: 1;
+      background: rgba(13,17,23,.7); padding: 2px 6px; border-radius: 3px;
+    }
+
+    /* ── 히트맵 ── */
+    .heatmap-section { border-top: 1px solid var(--border); }
+    .section-header {
+      padding: 10px 16px;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .1em;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    /* ── 기술적 분석 3열 ── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid var(--border);
+    }
+    .tech-cell { border-right: 1px solid var(--border); }
+    .tech-cell:last-child { border-right: none; }
+    .tech-title {
+      padding: 10px 16px; font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .1em;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .ts { font-size: 10px; color: var(--muted); text-align: center; padding: 6px; }
+    .err { font-size: 11px; color: var(--muted); padding: 4px 0; }
+
+    .tradingview-widget-container,
+    .tradingview-widget-container__widget { height: 100% !important; }
+  </style>
+</head>
+<body>
+
+<!-- ① 티커 테이프 -->
+<div class="ticker-wrap">
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {"symbols":[
+      {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+      {"proName":"NASDAQ:NDX","title":"나스닥 100"},
+      {"proName":"TVC:VIX","title":"VIX"},
+      {"proName":"FX_IDC:USDKRW","title":"USD/KRW"},
+      {"proName":"FX:EURUSD","title":"EUR/USD"},
+      {"proName":"FX:USDJPY","title":"USD/JPY"},
+      {"proName":"TVC:DXY","title":"달러지수"},
+      {"proName":"NASDAQ:NVDA","title":"NVDA"},
+      {"proName":"NASDAQ:AAPL","title":"AAPL"},
+      {"proName":"NASDAQ:MSFT","title":"MSFT"},
+      {"proName":"NASDAQ:GOOGL","title":"GOOGL"},
+      {"proName":"NASDAQ:AMZN","title":"AMZN"},
+      {"proName":"NASDAQ:META","title":"META"},
+      {"proName":"NASDAQ:TSLA","title":"TSLA"},
+      {"proName":"NASDAQ:AVGO","title":"AVGO"},
+      {"proName":"NASDAQ:PLTR","title":"PLTR"}
+    ],"showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive","locale":"kr","colorTheme":"dark"}
+    </script>
+  </div>
+</div>
+
+<!-- ② 메인 레이아웃 -->
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+
+    <!-- 공포탐욕지수 -->
+    <div class="section">
+      <div class="section-title">공포탐욕지수 (CNN)</div>
+      <svg viewBox="0 0 160 90" width="160" height="90" style="display:block;margin:0 auto;">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#F85149"/>
+            <stop offset="25%"  stop-color="#E3A000"/>
+            <stop offset="50%"  stop-color="#CCA800"/>
+            <stop offset="75%"  stop-color="#4AC26B"/>
+            <stop offset="100%" stop-color="#3FB950"/>
+          </linearGradient>
+        </defs>
+        <path d="M15 80 A65 65 0 0 1 145 80" fill="none" stroke="#21262D" stroke-width="14" stroke-linecap="round"/>
+        <path d="M15 80 A65 65 0 0 1 145 80" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="204" stroke-dashoffset="0" opacity="0.3"/>
+        <path id="arc" d="M15 80 A65 65 0 0 1 145 80" fill="none" stroke="#CCA800" stroke-width="14"
+              stroke-linecap="round" stroke-dasharray="204" stroke-dashoffset="102"/>
+        <line id="needle" x1="80" y1="80" x2="80" y2="22"
+              stroke="#E6EDF3" stroke-width="2.5" stroke-linecap="round" transform="rotate(0 80 80)"/>
+        <circle cx="80" cy="80" r="5" fill="#0D1117" stroke="#E6EDF3" stroke-width="2"/>
+        <text x="8"  y="90" fill="#F85149" font-size="8" font-family="sans-serif">공포</text>
+        <text x="122" y="90" fill="#3FB950" font-size="8" font-family="sans-serif">탐욕</text>
+      </svg>
+      <div class="fng-val" id="fng-val">—</div>
+      <div class="fng-lbl" id="fng-lbl">로딩 중...</div>
+      <div class="ts"    id="fng-ts"></div>
+    </div>
+
+    <!-- 환율 -->
+    <div class="section">
+      <div class="section-title">환율</div>
+      <div id="rates-list"><div class="err">로딩 중...</div></div>
+    </div>
+
+    <!-- 주요 종목 (TradingView Market Quotes) -->
+    <div class="section" style="padding:0; flex:1;">
+      <div class="section-title" style="padding:14px 14px 0;">미국 주요 주식</div>
+      <div class="tradingview-widget-container" style="height:440px;">
+        <div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+        {"width":"100%","height":440,
+         "symbolsGroups":[{"name":"주요 종목","symbols":[
+           {"name":"NASDAQ:TSLA","displayName":"테슬라"},
+           {"name":"NASDAQ:NVDA","displayName":"엔비디아"},
+           {"name":"NASDAQ:AAPL","displayName":"애플"},
+           {"name":"NASDAQ:MSFT","displayName":"마이크로소프트"},
+           {"name":"NASDAQ:GOOGL","displayName":"구글"},
+           {"name":"NASDAQ:META","displayName":"메타"},
+           {"name":"NASDAQ:AMZN","displayName":"아마존"},
+           {"name":"NASDAQ:AVGO","displayName":"브로드컴"},
+           {"name":"NASDAQ:PLTR","displayName":"팔란티어"},
+           {"name":"NASDAQ:QQQ","displayName":"QQQ ETF"},
+           {"name":"AMEX:VOO","displayName":"VOO ETF"}
+         ]}],
+         "showSymbolLogo":true,"isTransparent":true,"colorTheme":"dark","locale":"kr"}
+        </script>
+      </div>
+    </div>
+
+    <div class="ts" id="last-update" style="padding:8px;">업데이트: —</div>
+  </aside>
+
+  <!-- 차트 3개 (S&P500 / 나스닥 / VIX) -->
+  <div class="charts">
+    <div class="chart-box">
+      <div class="chart-lbl">▶ S&P 500</div>
+      <div class="tradingview-widget-container" style="height:100%;">
+        <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {"autosize":true,"symbol":"FOREXCOM:SPXUSD","interval":"D","timezone":"Asia/Seoul",
+         "theme":"dark","style":"1","locale":"kr","backgroundColor":"rgba(13,17,23,0)",
+         "allow_symbol_change":false,"hide_top_toolbar":true,"save_image":false,
+         "support_host":"https://www.tradingview.com"}
+        </script>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-lbl">▶ 나스닥</div>
+      <div class="tradingview-widget-container" style="height:100%;">
+        <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {"autosize":true,"symbol":"NASDAQ:NDX","interval":"D","timezone":"Asia/Seoul",
+         "theme":"dark","style":"1","locale":"kr","backgroundColor":"rgba(13,17,23,0)",
+         "allow_symbol_change":false,"hide_top_toolbar":true,"save_image":false,
+         "support_host":"https://www.tradingview.com"}
+        </script>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-lbl">▶ VIX 공포지수</div>
+      <div class="tradingview-widget-container" style="height:100%;">
+        <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {"autosize":true,"symbol":"TVC:VIX","interval":"D","timezone":"Asia/Seoul",
+         "theme":"dark","style":"3","locale":"kr","backgroundColor":"rgba(13,17,23,0)",
+         "allow_symbol_change":false,"hide_top_toolbar":true,"hide_volume":true,"save_image":false,
+         "support_host":"https://www.tradingview.com"}
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 히트맵 (전체 너비) -->
+<div class="heatmap-section">
+  <div class="section-header">▶ 미국 주식 — S&P 500 섹터 히트맵</div>
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+    {"exchanges":[],"dataSource":"SPX500","grouping":"sector","blockSize":"market_cap_basic",
+     "blockColor":"change","locale":"kr","colorTheme":"dark","hasTopBar":true,
+     "isDataSetEnabled":true,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,
+     "width":"100%","height":"520"}
+    </script>
+  </div>
+</div>
+
+<!-- ④ 투자 주체 대체 지표 (기술적 분석 3열) -->
+<div class="tech-grid">
+  <div class="tech-cell">
+    <div class="tech-title">S&P 500 — 매수 / 매도 강도</div>
+    <div class="tradingview-widget-container" style="height:420px;">
+      <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+      <script src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+      {"interval":"1D","width":"100%","isTransparent":true,"height":"420",
+       "symbol":"FOREXCOM:SPXUSD","showIntervalTabs":true,"displayMode":"multiple","locale":"kr","colorTheme":"dark"}
+      </script>
+    </div>
+  </div>
+  <div class="tech-cell">
+    <div class="tech-title">나스닥 — 매수 / 매도 강도</div>
+    <div class="tradingview-widget-container" style="height:420px;">
+      <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+      <script src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+      {"interval":"1D","width":"100%","isTransparent":true,"height":"420",
+       "symbol":"NASDAQ:NDX","showIntervalTabs":true,"displayMode":"multiple","locale":"kr","colorTheme":"dark"}
+      </script>
+    </div>
+  </div>
+  <div class="tech-cell">
+    <div class="tech-title">Put / Call 비율 — 기관 vs 개인 심리</div>
+    <div class="tradingview-widget-container" style="height:420px;">
+      <div class="tradingview-widget-container__widget" style="height:100%;"></div>
+      <script src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+      {"autosize":false,"symbol":"CBOE:PCC","interval":"D","timezone":"America/New_York",
+       "theme":"dark","style":"3","locale":"kr","backgroundColor":"rgba(13,17,23,0)",
+       "allow_symbol_change":false,"hide_top_toolbar":true,"hide_volume":false,
+       "height":420,"width":"100%","support_host":"https://www.tradingview.com"}
+      </script>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 공포탐욕지수 ──────────────────────────────────
+const FNG_COLOR = v =>
+  v <= 24 ? '#F85149' : v <= 44 ? '#E3A000' : v <= 55 ? '#CCA800' : v <= 74 ? '#4AC26B' : '#3FB950';
+
+const FNG_KR = { 'Extreme Fear':'극단적 공포', Fear:'공포', Neutral:'중립', Greed:'탐욕', 'Extreme Greed':'극단적 탐욕' };
+
+function setGauge(v) {
+  const color = FNG_COLOR(v);
+  const arc   = document.getElementById('arc');
+  const needle = document.getElementById('needle');
+  arc.setAttribute('stroke', color);
+  arc.setAttribute('stroke-dashoffset', 204 * (1 - v / 100));
+  needle.setAttribute('transform', `rotate(${-90 + v * 1.8} 80 80)`);
+  const el = document.getElementById('fng-val');
+  el.textContent = v;
+  el.style.color  = color;
+}
+
+async function loadFng() {
+  try {
+    const d = await fetch('https://api.alternative.me/fng/?limit=1').then(r => r.json());
+    const item = d.data[0];
+    setGauge(parseInt(item.value));
+    document.getElementById('fng-lbl').textContent = FNG_KR[item.value_classification] || item.value_classification;
+    document.getElementById('fng-ts').textContent  = '기준: ' + new Date(item.timestamp * 1000).toLocaleDateString('ko-KR');
+  } catch {
+    document.getElementById('fng-lbl').textContent = '데이터 없음';
+  }
+}
+
+// ── 환율 ──────────────────────────────────────────
+async function loadRates() {
+  try {
+    const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
+    const R = d.rates;
+    const pairs = [
+      { label:'USD / KRW', val: R.KRW,       dp:2 },
+      { label:'EUR / USD', val: 1 / R.EUR,   dp:4 },
+      { label:'USD / JPY', val: R.JPY,        dp:2 },
+      { label:'GBP / USD', val: 1 / R.GBP,   dp:4 },
+      { label:'USD / CNY', val: R.CNY,        dp:4 },
+    ];
+    document.getElementById('rates-list').innerHTML = pairs.map(p => `
+      <div class="rate-row">
+        <span class="rate-pair">${p.label}</span>
+        <span class="rate-val">${p.val.toFixed(p.dp)}</span>
+      </div>`).join('');
+  } catch {
+    document.getElementById('rates-list').innerHTML = '<div class="err">데이터 없음</div>';
+  }
+}
+
+// ── 갱신 ──────────────────────────────────────────
+async function refresh() {
+  await Promise.all([loadFng(), loadRates()]);
+  document.getElementById('last-update').textContent =
+    '업데이트: ' + new Date().toLocaleString('ko-KR');
+}
+
+refresh();
+setInterval(refresh, 5 * 60 * 1000);   // 5분마다 자동 갱신
+</script>
+</body>
+</html>
