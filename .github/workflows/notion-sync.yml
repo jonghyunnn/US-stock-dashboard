@@ -20,10 +20,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          
 
       - name: 패키지 설치
-        run: npm ci
+        run: npm install
 
       - name: 노션 데이터 동기화
         run: node scripts/notion-sync.js
