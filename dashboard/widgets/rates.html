@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 20px; min-height: 100vh;
+  }
+  .title { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; }
+  .card {
+    border: 1px solid #f0f0f0; border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+    transition: background .15s;
+  }
+  .card:hover { background: #fafafa; }
+  .pair { font-size: 14px; color: #666; font-weight: 500; }
+  .flag { font-size: 18px; margin-right: 8px; }
+  .val { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+  .updated { font-size: 11px; color: #ccc; margin-top: 12px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="title">환율</div>
+<div id="rates">
+  <div class="card"><div><span class="pair">로딩 중...</span></div></div>
+</div>
+<div class="updated" id="updated"></div>
+
+<script>
+const PAIRS = [
+  { label:'USD / KRW', flags:'🇺🇸 → 🇰🇷', key:'KRW',    mode:'direct', dp:2 },
+  { label:'EUR / USD', flags:'🇪🇺 → 🇺🇸', key:'EUR',    mode:'invert', dp:4 },
+  { label:'USD / JPY', flags:'🇺🇸 → 🇯🇵', key:'JPY',    mode:'direct', dp:2 },
+  { label:'GBP / USD', flags:'🇬🇧 → 🇺🇸', key:'GBP',    mode:'invert', dp:4 },
+  { label:'USD / CNY', flags:'🇺🇸 → 🇨🇳', key:'CNY',    mode:'direct', dp:4 },
+];
+
+async function load() {
+  try {
+    const d = await fetch('https://open.er-api.com/v6/latest/USD').then(r=>r.json());
+    const R = d.rates;
+    document.getElementById('rates').innerHTML = PAIRS.map(p => {
+      const val = p.mode === 'invert' ? (1/R[p.key]) : R[p.key];
+      return `
+        <div class="card">
+          <div>
+            <div style="font-size:18px;margin-bottom:2px;">${p.flags}</div>
+            <div class="pair">${p.label}</div>
+          </div>
+          <div class="val">${val.toFixed(p.dp)}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('updated').textContent = '업데이트: ' + new Date().toLocaleTimeString('ko-KR');
+  } catch {
+    document.getElementById('rates').innerHTML = '<div class="card"><span class="pair">데이터 없음</span></div>';
+  }
+}
+
+load();
+setInterval(load, 5 * 60 * 1000);
+</script>
+</body></html>
