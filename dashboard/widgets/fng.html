@@ -22,7 +22,6 @@
       letter-spacing: -0.3px;
     }
     .gauge-wrap { position: relative; width: 220px; height: 120px; }
-    svg { overflow: visible; }
     .gauge-value {
       font-size: 36px;
       font-weight: 700;
@@ -44,7 +43,7 @@
       text-align: center;
       margin-top: 6px;
     }
-    .error { color: #e74c3c; font-size: 13px; text-align: center; }
+    .error { color: #e74c3c; font-size: 12px; text-align: center; }
   </style>
 </head>
 <body>
@@ -60,11 +59,8 @@
           <stop offset="100%" stop-color="#27ae60"/>
         </linearGradient>
       </defs>
-      <!-- background track -->
       <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#eee" stroke-width="18" stroke-linecap="round"/>
-      <!-- colored arc -->
       <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="url(#gaugeGrad)" stroke-width="18" stroke-linecap="round"/>
-      <!-- needle -->
       <line id="needle" x1="110" y1="110" x2="110" y2="30" stroke="#333" stroke-width="2.5" stroke-linecap="round" transform="rotate(0, 110, 110)"/>
       <circle cx="110" cy="110" r="5" fill="#333"/>
     </svg>
@@ -91,24 +87,35 @@
       document.getElementById('needle').setAttribute('transform', `rotate(${angle}, 110, 110)`);
     }
 
+    function render(score, rating) {
+      const val = Math.round(score);
+      document.getElementById('fngValue').textContent = val;
+      document.getElementById('fngLabel').textContent = labelMap[rating] || rating;
+      const now = new Date();
+      document.getElementById('updateTime').textContent =
+        '업데이트: ' + now.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      setNeedle(val);
+    }
+
     async function fetchFNG() {
+      const CNN_URL = 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
+      const PROXY_URL = 'https://api.allorigins.win/get?url=' + encodeURIComponent(CNN_URL);
+
       try {
-        const res = await fetch('https://api.alternative.me/fng/?limit=1&format=json');
+        // 직접 CNN API 시도
+        const res = await fetch(CNN_URL);
         const data = await res.json();
-        const item = data.data[0];
-        const val = parseInt(item.value);
-        const cls = item.value_classification;
-
-        document.getElementById('fngValue').textContent = val;
-        document.getElementById('fngLabel').textContent = labelMap[cls] || cls;
-
-        const now = new Date();
-        const timeStr = now.toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-        document.getElementById('updateTime').textContent = '업데이트: ' + timeStr;
-
-        setNeedle(val);
+        render(data.fear_and_greed.score, data.fear_and_greed.rating);
       } catch (e) {
-        document.getElementById('fngLabel').innerHTML = '<span class="error">데이터 로드 실패</span>';
+        try {
+          // CORS 차단 시 프록시 경유
+          const res = await fetch(PROXY_URL);
+          const wrapper = await res.json();
+          const data = JSON.parse(wrapper.contents);
+          render(data.fear_and_greed.score, data.fear_and_greed.rating);
+        } catch (e2) {
+          document.getElementById('fngLabel').innerHTML = '<span class="error">데이터 로드 실패</span>';
+        }
       }
     }
 
