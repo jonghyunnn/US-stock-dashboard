@@ -106,20 +106,39 @@
       { localName: 'BC_30YEAR', vid: 'v30', cid: 'ch30' },
     ];
 
-    // XML에 네임스페이스 prefix(d:)가 붙어있어 localName으로 조회
-    function getVal(props, localName) {
-      for (const el of props.querySelectorAll('*')) {
-        if (el.localName === localName) return parseFloat(el.textContent);
+    // XML 네임스페이스(m:, d: 등) 무시하고 localName으로 탐색
+    function byLocal(root, name) {
+      for (const el of root.querySelectorAll('*')) {
+        if (el.localName === name) return el;
       }
-      return NaN;
+      return null;
+    }
+    function allByLocal(doc, name) {
+      return [...doc.querySelectorAll('*')].filter(el => el.localName === name);
     }
 
+    // CORS 프록시 fallback 순서
+    const PROXIES = [
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
+
     async function fetchMonth(yyyymm) {
-      const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${yyyymm}`;
-      const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-      const text = await res.text();
-      const xml = new DOMParser().parseFromString(text, 'text/xml');
-      return [...xml.querySelectorAll('properties')];
+      const target = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${yyyymm}`;
+
+      for (const makeProxy of PROXIES) {
+        try {
+          const res = await fetch(makeProxy(target));
+          if (!res.ok) continue;
+          const text = await res.text();
+          // 에러 HTML 페이지 걸러내기 — XML이면 반드시 'properties' 문자열 포함
+          if (!text || !text.includes('properties')) continue;
+          const xml = new DOMParser().parseFromString(text, 'text/xml');
+          const entries = allByLocal(xml, 'properties');
+          if (entries.length > 0) return entries;
+        } catch (_) { /* 다음 프록시 시도 */ }
+      }
+      return [];
     }
 
     async function load() {
@@ -131,30 +150,26 @@
         const prevYM = `${prevDate.getFullYear()}${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
 
         let entries = await fetchMonth(curYM);
-
-        // 월초라 당월 데이터가 1개 이하면 전월도 가져와 비교값 확보
+        // 월초라 당월 데이터 부족하면 전월 보완
         if (entries.length < 2) {
-          const prevEntries = await fetchMonth(prevYM);
-          entries = [...prevEntries, ...entries];
+          const prev = await fetchMonth(prevYM);
+          entries = [...prev, ...entries];
         }
-
-        if (entries.length === 0) throw new Error('No data');
+        if (entries.length === 0) throw new Error('모든 프록시에서 데이터 없음');
 
         const latest = entries[entries.length - 1];
         const before = entries.length >= 2 ? entries[entries.length - 2] : null;
 
-        const rawDate = (() => {
-          for (const el of latest.querySelectorAll('*')) {
-            if (el.localName === 'NEW_DATE') return el.textContent.split('T')[0];
-          }
-          return '';
-        })();
+        const dateEl = byLocal(latest, 'NEW_DATE');
+        const rawDate = dateEl ? dateEl.textContent.split('T')[0] : '';
         document.getElementById('footer').textContent =
           `기준일: ${rawDate} · 출처: 미국 재무부 · 30분마다 자동 갱신`;
 
         FIELDS.forEach(({ localName, vid, cid }) => {
-          const cur = getVal(latest, localName);
-          const pre = before ? getVal(before, localName) : NaN;
+          const curEl = byLocal(latest, localName);
+          const preEl = before ? byLocal(before, localName) : null;
+          const cur = curEl ? parseFloat(curEl.textContent) : NaN;
+          const pre = preEl ? parseFloat(preEl.textContent) : NaN;
 
           const vEl = document.getElementById(vid);
           vEl.textContent = isNaN(cur) ? 'N/A' : `${cur.toFixed(2)}%`;
@@ -173,10 +188,12 @@
         });
 
       } catch (e) {
-        console.error(e);
-        document.getElementById('footer').textContent = '데이터 로드 실패 · 잠시 후 새로고침';
+        console.error('yields:', e);
+        document.getElementById('footer').textContent = `로드 실패: ${e.message}`;
         FIELDS.forEach(({ vid, cid }) => {
-          document.getElementById(vid).textContent = '오류';
+          const vEl = document.getElementById(vid);
+          vEl.textContent = 'N/A';
+          vEl.classList.remove('loading');
           document.getElementById(cid).textContent = '재시도 중…';
           document.getElementById(cid).className = 'change flat';
         });
