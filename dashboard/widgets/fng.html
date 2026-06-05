@@ -2,18 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script>const H = parseInt(new URLSearchParams(location.search).get('h')) || 320;</script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    background: #fff; height: 320px; overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 16px;
+    background:#fff; overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px;
   }
-  .title { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
-  .fng-num { font-size: 48px; font-weight: 700; text-align: center; margin: 12px 0 4px; }
-  .fng-lbl { font-size: 16px; color: #555; text-align: center; font-weight: 500; }
-  .updated { font-size: 11px; color: #bbb; margin-top: 10px; }
+  .title { font-size:12px; color:#888; text-transform:uppercase; letter-spacing:.1em; margin-bottom:12px; }
+  .fng-num { font-size:48px; font-weight:700; text-align:center; margin:12px 0 4px; }
+  .fng-lbl { font-size:16px; color:#555; text-align:center; font-weight:500; }
+  .updated { font-size:11px; color:#bbb; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -21,10 +21,8 @@
 <svg viewBox="0 0 220 120" width="200" height="110">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="#e53935"/>
-      <stop offset="25%"  stop-color="#fb8c00"/>
-      <stop offset="50%"  stop-color="#fdd835"/>
-      <stop offset="75%"  stop-color="#7cb342"/>
+      <stop offset="0%" stop-color="#e53935"/><stop offset="25%" stop-color="#fb8c00"/>
+      <stop offset="50%" stop-color="#fdd835"/><stop offset="75%" stop-color="#7cb342"/>
       <stop offset="100%" stop-color="#2e7d32"/>
     </linearGradient>
   </defs>
@@ -42,31 +40,30 @@
 <div class="fng-lbl" id="fng-lbl">로딩 중...</div>
 <div class="updated" id="updated"></div>
 <script>
+document.body.style.height = H + 'px';
 const COLOR = v => v<=24?'#e53935':v<=44?'#fb8c00':v<=55?'#fdd835':v<=74?'#7cb342':'#2e7d32';
 const KR = {'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'};
 function setGauge(v) {
-  const color = COLOR(v);
-  document.getElementById('arc').setAttribute('stroke', color);
-  document.getElementById('arc').setAttribute('stroke-dashoffset', 283 * (1 - v/100));
-  document.getElementById('needle').setAttribute('transform', `rotate(${-90 + v*1.8} 110 110)`);
-  const n = document.getElementById('fng-num');
-  n.textContent = v; n.style.color = color;
+  const c = COLOR(v);
+  document.getElementById('arc').setAttribute('stroke', c);
+  document.getElementById('arc').setAttribute('stroke-dashoffset', 283*(1-v/100));
+  document.getElementById('needle').setAttribute('transform', `rotate(${-90+v*1.8} 110 110)`);
+  const n = document.getElementById('fng-num'); n.textContent=v; n.style.color=c;
 }
 async function load() {
   try {
-    const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata', {
-      headers: {'Referer':'https://edition.cnn.com/','User-Agent':'Mozilla/5.0'}
-    });
+    const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
+      {headers:{'Referer':'https://edition.cnn.com/','User-Agent':'Mozilla/5.0'}});
     if (!res.ok) throw new Error();
     const d = await res.json();
     setGauge(Math.round(d.fear_and_greed.score));
-    document.getElementById('fng-lbl').textContent = KR[d.fear_and_greed.rating] || d.fear_and_greed.rating;
+    document.getElementById('fng-lbl').textContent = KR[d.fear_and_greed.rating]||d.fear_and_greed.rating;
   } catch {
     const d = await fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json());
     setGauge(parseInt(d.data[0].value));
-    document.getElementById('fng-lbl').textContent = KR[d.data[0].value_classification] || d.data[0].value_classification;
+    document.getElementById('fng-lbl').textContent = KR[d.data[0].value_classification]||d.data[0].value_classification;
   }
-  document.getElementById('updated').textContent = '업데이트: ' + new Date().toLocaleTimeString('ko-KR');
+  document.getElementById('updated').textContent = '업데이트: '+new Date().toLocaleTimeString('ko-KR');
 }
 load(); setInterval(load, 5*60*1000);
 </script>

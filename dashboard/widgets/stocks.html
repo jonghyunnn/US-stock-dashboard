@@ -2,17 +2,18 @@
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#fff;height:520px;overflow:hidden;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#fff;height:100vh;overflow:hidden;}
   .title{font-family:-apple-system,sans-serif;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.1em;padding:12px 16px 6px;}
+  .wrap{height:calc(100vh - 32px);}
 </style>
 </head>
 <body>
 <div class="title">미국 주요 주식</div>
-<div class="tradingview-widget-container" style="height:488px;">
+<div class="wrap tradingview-widget-container">
   <div class="tradingview-widget-container__widget" style="height:100%;"></div>
   <script src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
-  {"width":"100%","height":488,
+  {"width":"100%","height":"100%",
    "symbolsGroups":[{"name":"주요 종목","symbols":[
      {"name":"NASDAQ:TSLA","displayName":"테슬라"},
      {"name":"NASDAQ:NVDA","displayName":"엔비디아"},
