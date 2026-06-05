@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #222;
+      overflow-y: auto;
+    }
+    .header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+    .header button {
+      font-size: 11px;
+      color: #888;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* API Key Setup */
+    #setup {
+      padding: 32px 20px;
+      text-align: center;
+    }
+    #setup h3 { font-size: 14px; margin-bottom: 8px; color: #333; }
+    #setup p { font-size: 12px; color: #666; margin-bottom: 16px; line-height: 1.6; }
+    #setup a { color: #2962ff; }
+    #setup input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    #setup button {
+      width: 100%;
+      padding: 10px;
+      background: #2962ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Earnings List */
+    #content { padding: 8px 0; }
+    .date-group { margin-bottom: 4px; }
+    .date-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      padding: 6px 16px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .earning-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f5f5f5;
+      gap: 10px;
+    }
+    .earning-item:hover { background: #fafafa; }
+    .symbol {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      min-width: 52px;
+    }
+    .company {
+      flex: 1;
+      font-size: 12px;
+      color: #555;
+    }
+    .timing {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .timing.bmo { background: #e8f5e9; color: #2e7d32; }
+    .timing.amc { background: #fff8e1; color: #f57f17; }
+    .timing.dmh { background: #f3e5f5; color: #7b1fa2; }
+    .eps {
+      font-size: 11px;
+      color: #888;
+      min-width: 80px;
+      text-align: right;
+    }
+    .badge-soon {
+      font-size: 10px;
+      background: #ffebee;
+      color: #c62828;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 13px;
+      color: #999;
+    }
+    .error-msg {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #e53935;
+    }
+    .update-info {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>실적발표 캘린더</h2>
+    <button onclick="resetKey()">API 키 변경</button>
+  </div>
+
+  <div id="setup" style="display:none">
+    <h3>Finnhub API 키 설정</h3>
+    <p>
+      실적발표 데이터를 가져오려면 무료 API 키가 필요합니다.<br>
+      <a href="https://finnhub.io/register" target="_blank">finnhub.io</a>에서 무료 가입 후 발급받으세요.
+    </p>
+    <input id="apiInput" type="text" placeholder="API 키를 입력하세요 (예: d1a2b3c4...)" />
+    <button onclick="saveKey()">저장하고 불러오기</button>
+  </div>
+
+  <div id="content" style="display:none">
+    <div id="list"></div>
+    <div class="update-info" id="updateInfo"></div>
+  </div>
+
+  <script>
+    const WATCHLIST = {
+      'NVDA':  '엔비디아',
+      'AAPL':  '애플',
+      'TSLA':  '테슬라',
+      'MSFT':  '마이크로소프트',
+      'GOOGL': '구글',
+      'META':  '메타',
+      'AMZN':  '아마존',
+      'AVGO':  '브로드컴',
+      'PLTR':  '팔란티어',
+      'IONQ':  '아이온큐'
+    };
+
+    const TIMING_LABEL = { bmo: '장 전', amc: '장 후', dmh: '장 중' };
+    const TIMING_CLASS = { bmo: 'bmo', amc: 'amc', dmh: 'dmh' };
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+    }
+
+    function daysUntil(dateStr) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const target = new Date(dateStr + 'T00:00:00');
+      return Math.round((target - now) / 86400000);
+    }
+
+    function getKey() { return localStorage.getItem('finnhub_key'); }
+
+    function saveKey() {
+      const key = document.getElementById('apiInput').value.trim();
+      if (!key) return;
+      localStorage.setItem('finnhub_key', key);
+      showContent();
+      loadEarnings(key);
+    }
+
+    function resetKey() {
+      localStorage.removeItem('finnhub_key');
+      document.getElementById('content').style.display = 'none';
+      document.getElementById('setup').style.display = 'block';
+    }
+
+    function showContent() {
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    }
+
+    async function loadEarnings(key) {
+      const list = document.getElementById('list');
+      list.innerHTML = '<div class="empty">불러오는 중...</div>';
+
+      const today = new Date();
+      const from = today.toISOString().split('T')[0];
+      const toDate = new Date(today.getTime() + 60 * 86400000);
+      const to = toDate.toISOString().split('T')[0];
+
+      try {
+        const res = await fetch(
+          `https://finnhub.io/api/v1/calendar/earnings?from=${from}&to=${to}&token=${key}`
+        );
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+
+        const filtered = (data.earningsCalendar || [])
+          .filter(e => Object.keys(WATCHLIST).includes(e.symbol))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        if (filtered.length === 0) {
+          list.innerHTML = '<div class="empty">향후 60일 내 관심 종목 실적발표 없음</div>';
+          return;
+        }
+
+        const grouped = {};
+        filtered.forEach(e => {
+          if (!grouped[e.date]) grouped[e.date] = [];
+          grouped[e.date].push(e);
+        });
+
+        list.innerHTML = Object.entries(grouped).map(([date, items]) => {
+          const daysDiff = daysUntil(date);
+          return `
+            <div class="date-group">
+              <div class="date-label">${formatDate(date)}${daysDiff <= 7 ? ' &nbsp;<span class="badge-soon">D-' + daysDiff + '</span>' : ''}</div>
+              ${items.map(e => {
+                const timing = e.hour || '';
+                const eps = e.epsEstimate !== null && e.epsEstimate !== undefined
+                  ? `EPS 예상 $${Number(e.epsEstimate).toFixed(2)}`
+                  : '';
+                return `
+                  <div class="earning-item">
+                    <div class="symbol">${e.symbol}</div>
+                    <div class="company">${WATCHLIST[e.symbol] || ''}</div>
+                    <div class="timing ${TIMING_CLASS[timing] || ''}">${TIMING_LABEL[timing] || '-'}</div>
+                    <div class="eps">${eps}</div>
+                  </div>`;
+              }).join('')}
+            </div>`;
+        }).join('');
+
+        const now = new Date();
+        document.getElementById('updateInfo').textContent =
+          `업데이트: ${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      } catch (e) {
+        list.innerHTML = `<div class="error-msg">데이터 로드 실패 (${e.message})<br>API 키를 확인하거나 잠시 후 다시 시도하세요.</div>`;
+      }
+    }
+
+    // Init
+    const key = getKey();
+    if (key) {
+      showContent();
+      loadEarnings(key);
+      setInterval(() => loadEarnings(key), 60 * 60 * 1000);
+    } else {
+      document.getElementById('setup').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
