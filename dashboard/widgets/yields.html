@@ -6,39 +6,99 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
-    iframe { width: 100%; height: 100%; border: none; display: block; }
+    .grid {
+      display: grid;
+      grid-template-rows: repeat(4, 25%);
+      height: 100vh;
+    }
+    .cell {
+      overflow: hidden;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .cell:last-child { border-bottom: none; }
+    .tradingview-widget-container { width: 100%; height: 100%; }
+    .tradingview-widget-container__widget { width: 100%; height: 100%; }
   </style>
 </head>
 <body>
-  <iframe id="widget" allowtransparency="true"></iframe>
-  <script>
-    const config = {
-      colorTheme: "light",
-      dateRange: "1M",
-      isTransparent: false,
-      showFloatingTooltip: false,
-      plotLineColorGrowing: "rgba(41, 98, 255, 1)",
-      plotLineColorFalling: "rgba(41, 98, 255, 1)",
-      gridLineColor: "rgba(240, 243, 250, 0)",
-      scaleFontColor: "#0F0F0F",
-      belowLineFillColorGrowing: "rgba(41, 98, 255, 0.12)",
-      belowLineFillColorFalling: "rgba(41, 98, 255, 0.12)",
-      belowLineFillColorGrowingBottom: "rgba(41, 98, 255, 0)",
-      belowLineFillColorFallingBottom: "rgba(41, 98, 255, 0)",
-      symbolActiveColor: "rgba(41, 98, 255, 0.12)",
-      tabs: [{
-        title: "미국 국채 금리",
-        symbols: [
-          { s: "TVC:US02Y", d: "미국 2년물" },
-          { s: "TVC:US05Y", d: "미국 5년물" },
-          { s: "TVC:US10Y", d: "미국 10년물" },
-          { s: "TVC:US30Y", d: "미국 30년물" }
-        ]
-      }]
-    };
-    document.getElementById('widget').src =
-      'https://s.tradingview.com/embed-widget/market-overview/?locale=kr#' +
-      encodeURIComponent(JSON.stringify(config));
-  </script>
+  <div class="grid">
+
+    <div class="cell">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "TVC:US02Y",
+          "width": "100%",
+          "height": "100%",
+          "locale": "kr",
+          "dateRange": "1M",
+          "colorTheme": "light",
+          "isTransparent": false,
+          "autosize": true,
+          "largeChartUrl": ""
+        }
+        </script>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "TVC:US05Y",
+          "width": "100%",
+          "height": "100%",
+          "locale": "kr",
+          "dateRange": "1M",
+          "colorTheme": "light",
+          "isTransparent": false,
+          "autosize": true,
+          "largeChartUrl": ""
+        }
+        </script>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "TVC:US10Y",
+          "width": "100%",
+          "height": "100%",
+          "locale": "kr",
+          "dateRange": "1M",
+          "colorTheme": "light",
+          "isTransparent": false,
+          "autosize": true,
+          "largeChartUrl": ""
+        }
+        </script>
+      </div>
+    </div>
+
+    <div class="cell">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "TVC:US30Y",
+          "width": "100%",
+          "height": "100%",
+          "locale": "kr",
+          "dateRange": "1M",
+          "colorTheme": "light",
+          "isTransparent": false,
+          "autosize": true,
+          "largeChartUrl": ""
+        }
+        </script>
+      </div>
+    </div>
+
+  </div>
 </body>
 </html>
