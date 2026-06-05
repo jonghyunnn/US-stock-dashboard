@@ -1,33 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#fff;height:100vh;overflow:hidden;}
-  .title{font-family:-apple-system,sans-serif;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.1em;padding:12px 16px 6px;}
-  .wrap{height:calc(100vh - 32px);}
-</style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+    iframe { width: 100%; height: 100%; border: none; display: block; }
+  </style>
 </head>
 <body>
-<div class="title">미국 주요 주식</div>
-<div class="wrap tradingview-widget-container">
-  <div class="tradingview-widget-container__widget" style="height:100%;"></div>
-  <script src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
-  {"width":"100%","height":"100%",
-   "symbolsGroups":[{"name":"주요 종목","symbols":[
-     {"name":"NASDAQ:TSLA","displayName":"테슬라"},
-     {"name":"NASDAQ:NVDA","displayName":"엔비디아"},
-     {"name":"NASDAQ:AAPL","displayName":"애플"},
-     {"name":"NASDAQ:MSFT","displayName":"마이크로소프트"},
-     {"name":"NASDAQ:GOOGL","displayName":"구글"},
-     {"name":"NASDAQ:META","displayName":"메타"},
-     {"name":"NASDAQ:AMZN","displayName":"아마존"},
-     {"name":"NASDAQ:AVGO","displayName":"브로드컴"},
-     {"name":"NASDAQ:PLTR","displayName":"팔란티어"},
-     {"name":"NASDAQ:QQQ","displayName":"QQQ ETF"},
-     {"name":"AMEX:VOO","displayName":"VOO ETF"}
-   ]}],
-   "showSymbolLogo":true,"isTransparent":false,"colorTheme":"light","locale":"kr"}
-  </script>
-</div>
-</body></html>
+  <iframe src="https://s.tradingview.com/embed-widget/market-overview/?locale=kr#%7B%22colorTheme%22%3A%22light%22%2C%22dateRange%22%3A%2212M%22%2C%22isTransparent%22%3Afalse%2C%22showFloatingTooltip%22%3Afalse%2C%22plotLineColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22plotLineColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%201)%22%2C%22gridLineColor%22%3A%22rgba(240%2C%20243%2C%20250%2C%200)%22%2C%22scaleFontColor%22%3A%22%230F0F0F%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22belowLineFillColorGrowingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22belowLineFillColorFallingBottom%22%3A%22rgba(41%2C%2098%2C%20255%2C%200)%22%2C%22symbolActiveColor%22%3A%22rgba(41%2C%2098%2C%20255%2C%200.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22NASDAQ%3ATSLA%22%2C%22d%22%3A%22%ED%85%8C%EC%8A%AC%EB%9D%BC%22%7D%2C%7B%22s%22%3A%22NASDAQ%3ANVDA%22%2C%22d%22%3A%22%EC%97%94%EB%B9%84%EB%94%94%EC%95%84%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AAAPL%22%2C%22d%22%3A%22%EC%95%A0%ED%94%8C%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AMSFT%22%2C%22d%22%3A%22%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C%EC%86%8C%ED%94%84%ED%8A%B8%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AGOOG%22%2C%22d%22%3A%22%EA%B5%AC%EA%B8%80%22%7D%2C%7B%22s%22%3A%22NASDAQ%3APLTR%22%2C%22d%22%3A%22%ED%8C%94%EB%9E%80%ED%8B%B0%EC%96%B4%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AQQQ%22%2C%22d%22%3A%22QQQ%22%7D%2C%7B%22s%22%3A%22NYSE%3AIONQ%22%2C%22d%22%3A%22%EC%95%84%EC%9D%B4%EC%98%A8%ED%81%90%22%7D%2C%7B%22s%22%3A%22NASDAQ%3AAVGO%22%2C%22d%22%3A%22%EB%B8%8C%EB%A1%9C%EB%93%9C%EC%BB%B4%22%7D%2C%7B%22s%22%3A%22AMEX%3AVOO%22%2C%22d%22%3A%22%EB%B1%85%EA%B0%80%EB%93%9C%22%7D%5D%7D%5D%7D" allowtransparency="true"></iframe>
+</body>
+</html>

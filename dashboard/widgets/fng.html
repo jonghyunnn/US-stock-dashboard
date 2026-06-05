@@ -1,70 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<script>const H = parseInt(new URLSearchParams(location.search).get('h')) || 320;</script>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background:#fff; overflow:hidden;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px;
-  }
-  .title { font-size:12px; color:#888; text-transform:uppercase; letter-spacing:.1em; margin-bottom:12px; }
-  .fng-num { font-size:48px; font-weight:700; text-align:center; margin:12px 0 4px; }
-  .fng-lbl { font-size:16px; color:#555; text-align:center; font-weight:500; }
-  .updated { font-size:11px; color:#bbb; margin-top:10px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .gauge-wrap { position: relative; width: 220px; height: 120px; }
+    svg { overflow: visible; }
+    .gauge-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #333;
+      text-align: center;
+      margin-top: 6px;
+      line-height: 1;
+    }
+    .gauge-label {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .update-time {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .error { color: #e74c3c; font-size: 13px; text-align: center; }
+  </style>
 </head>
 <body>
-<div class="title">공포탐욕지수 (CNN Fear &amp; Greed)</div>
-<svg viewBox="0 0 220 120" width="200" height="110">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#e53935"/><stop offset="25%" stop-color="#fb8c00"/>
-      <stop offset="50%" stop-color="#fdd835"/><stop offset="75%" stop-color="#7cb342"/>
-      <stop offset="100%" stop-color="#2e7d32"/>
-    </linearGradient>
-  </defs>
-  <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="#f0f0f0" stroke-width="18" stroke-linecap="round"/>
-  <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="url(#g)" stroke-width="18" stroke-linecap="round" opacity=".25"/>
-  <path id="arc" d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="#fdd835" stroke-width="18"
-        stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="142"/>
-  <line id="needle" x1="110" y1="110" x2="110" y2="30"
-        stroke="#333" stroke-width="3" stroke-linecap="round" transform="rotate(0 110 110)"/>
-  <circle cx="110" cy="110" r="7" fill="#fff" stroke="#333" stroke-width="2.5"/>
-  <text x="14" y="128" fill="#e53935" font-size="11" font-family="sans-serif">공포</text>
-  <text x="174" y="128" fill="#2e7d32" font-size="11" font-family="sans-serif">탐욕</text>
-</svg>
-<div class="fng-num" id="fng-num" style="color:#fdd835">—</div>
-<div class="fng-lbl" id="fng-lbl">로딩 중...</div>
-<div class="updated" id="updated"></div>
-<script>
-document.body.style.height = H + 'px';
-const COLOR = v => v<=24?'#e53935':v<=44?'#fb8c00':v<=55?'#fdd835':v<=74?'#7cb342':'#2e7d32';
-const KR = {'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'};
-function setGauge(v) {
-  const c = COLOR(v);
-  document.getElementById('arc').setAttribute('stroke', c);
-  document.getElementById('arc').setAttribute('stroke-dashoffset', 283*(1-v/100));
-  document.getElementById('needle').setAttribute('transform', `rotate(${-90+v*1.8} 110 110)`);
-  const n = document.getElementById('fng-num'); n.textContent=v; n.style.color=c;
-}
-async function load() {
-  try {
-    const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
-      {headers:{'Referer':'https://edition.cnn.com/','User-Agent':'Mozilla/5.0'}});
-    if (!res.ok) throw new Error();
-    const d = await res.json();
-    setGauge(Math.round(d.fear_and_greed.score));
-    document.getElementById('fng-lbl').textContent = KR[d.fear_and_greed.rating]||d.fear_and_greed.rating;
-  } catch {
-    const d = await fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json());
-    setGauge(parseInt(d.data[0].value));
-    document.getElementById('fng-lbl').textContent = KR[d.data[0].value_classification]||d.data[0].value_classification;
-  }
-  document.getElementById('updated').textContent = '업데이트: '+new Date().toLocaleTimeString('ko-KR');
-}
-load(); setInterval(load, 5*60*1000);
-</script>
-</body></html>
+  <div class="title">공포탐욕지수 (CNN FEAR &amp; GREED)</div>
+  <div class="gauge-wrap">
+    <svg width="220" height="120" viewBox="0 0 220 120">
+      <defs>
+        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#e74c3c"/>
+          <stop offset="25%"  stop-color="#e67e22"/>
+          <stop offset="50%"  stop-color="#f1c40f"/>
+          <stop offset="75%"  stop-color="#2ecc71"/>
+          <stop offset="100%" stop-color="#27ae60"/>
+        </linearGradient>
+      </defs>
+      <!-- background track -->
+      <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#eee" stroke-width="18" stroke-linecap="round"/>
+      <!-- colored arc -->
+      <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="url(#gaugeGrad)" stroke-width="18" stroke-linecap="round"/>
+      <!-- needle -->
+      <line id="needle" x1="110" y1="110" x2="110" y2="30" stroke="#333" stroke-width="2.5" stroke-linecap="round" transform="rotate(0, 110, 110)"/>
+      <circle cx="110" cy="110" r="5" fill="#333"/>
+    </svg>
+  </div>
+  <div class="gauge-value" id="fngValue">--</div>
+  <div class="gauge-label" id="fngLabel">로딩 중...</div>
+  <div class="update-time" id="updateTime"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const h = parseInt(params.get('h') || 320);
+    document.body.style.height = h + 'px';
+
+    const labelMap = {
+      'Extreme Fear': '극단적 공포',
+      'Fear': '공포',
+      'Neutral': '중립',
+      'Greed': '탐욕',
+      'Extreme Greed': '극단적 탐욕'
+    };
+
+    function setNeedle(value) {
+      const angle = -90 + (value / 100) * 180;
+      document.getElementById('needle').setAttribute('transform', `rotate(${angle}, 110, 110)`);
+    }
+
+    async function fetchFNG() {
+      try {
+        const res = await fetch('https://api.alternative.me/fng/?limit=1&format=json');
+        const data = await res.json();
+        const item = data.data[0];
+        const val = parseInt(item.value);
+        const cls = item.value_classification;
+
+        document.getElementById('fngValue').textContent = val;
+        document.getElementById('fngLabel').textContent = labelMap[cls] || cls;
+
+        const now = new Date();
+        const timeStr = now.toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        document.getElementById('updateTime').textContent = '업데이트: ' + timeStr;
+
+        setNeedle(val);
+      } catch (e) {
+        document.getElementById('fngLabel').innerHTML = '<span class="error">데이터 로드 실패</span>';
+      }
+    }
+
+    fetchFNG();
+    setInterval(fetchFNG, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
